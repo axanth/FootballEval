@@ -339,6 +339,9 @@
 </main>
 
 <style>
+    :global(html) {
+        color-scheme: light;
+    }
   :global(body) {
     margin: 0;
     padding: 0;
