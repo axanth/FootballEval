@@ -20,6 +20,7 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
-    "bulma": "^1.0.4"
+    "bulma": "^1.0.4",
+    "bulma-checkbox": "^1.2.1"
   }
 }

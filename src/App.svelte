@@ -203,8 +203,18 @@
   // Email functionality
   let recipientEmail = "";
   let playerName = "";
+  let birthYear: number | null = null;
   let coachName = "";
   let teamName = "";
+
+  const currentYear = new Date().getFullYear();
+  const minBirthYear = currentYear - 40;
+  const maxBirthYear = currentYear - 6;
+
+  $: age = birthYear ? currentYear - birthYear : null;
+
+  $: isBirthYearValid =
+    !birthYear || (birthYear >= minBirthYear && birthYear <= maxBirthYear);
 
   // Validate email format
   $: isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail);
@@ -219,6 +229,14 @@
     console.log("Sending evaluation to:", recipientEmail);
     console.log("Ratings:", ratings);
     alert(`Evaluation results will be sent to ${recipientEmail}`);
+  }
+
+  function parseCategoryLabel(label: string) {
+    const match = label.match(/^(.*)\s\((.*)\)$/);
+    if (match) {
+      return { english: match[1], greek: match[2] };
+    }
+    return { english: label, greek: "" };
   }
 </script>
 
@@ -248,7 +266,39 @@
           </div>
         </label>
       </div>
-       <div class="field">
+      <div class="field">
+        <label class="label" for="birth-year">Birth Year (Έτος γέννησης)</label>
+        <div class="field has-addons">
+          <div class="control is-expanded">
+            <input
+              id="birth-year"
+              class="input"
+              class:is-danger={!isBirthYearValid && birthYear !== null}
+              type="number"
+              min={minBirthYear}
+              max={maxBirthYear}
+              placeholder="Enter birth year (e.g. 2012)"
+              bind:value={birthYear}
+            />
+          </div>
+          <div class="control">
+            <span class="button is-static">
+              {#if age !== null}
+                Age: {age}
+              {:else}
+                Age: -
+              {/if}
+            </span>
+          </div>
+        </div>
+        {#if !isBirthYearValid && birthYear !== null}
+          <p class="help is-danger">
+            Please enter a valid birth year between {minBirthYear} and {maxBirthYear}
+            (ages 6-40).
+          </p>
+        {/if}
+      </div>
+      <div class="field">
         <label class="label"
           >Team Name (Ομάδα παίχτη)
           <div class="control is-expanded">
@@ -263,18 +313,17 @@
       </div>
       <div class="field">
         <label class="label"
-          >Coach Name (Όνομα προπονητή)
+          >Evaluator Name (Όνομα αξιολογητή)
           <div class="control is-expanded">
             <input
               class="input"
               type="text"
-              placeholder="Enter coach's name"
+              placeholder="Enter evaluator's name"
               bind:value={coachName}
             />
           </div>
         </label>
       </div>
-      
     </div>
     <div class="has-text-centered mt-3 mb-3">
       <p class="is-size-6 is-italic">
@@ -285,13 +334,25 @@
     <div class="box">
       <div class="checkboxes">
         {#each Object.entries(categories) as [categoryKey, categoryLabel]}
+          {@const labelParts = parseCategoryLabel(categoryLabel)}
           <div class="row">
-            <label class="checkbox">
+            <label class="b-checkbox checkbox is-large">
               <input
                 type="checkbox"
                 on:change={() => handleCategoryChange(categoryKey)}
               />
-              {categoryLabel}
+              <span class="check is-success"></span>
+              <span
+                class="control-label"
+                style="font-size: 0.75em; line-height: 1.2;"
+              >
+                <span class="is-block has-text-weight-bold"
+                  >{labelParts.english}</span
+                >
+                <span class="is-block is-italic has-text-grey-light"
+                  >{labelParts.greek}</span
+                >
+              </span>
             </label>
           </div>
         {/each}
@@ -360,9 +421,6 @@
 </main>
 
 <style>
-  :global(html) {
-    color-scheme: light;
-  }
   :global(body) {
     margin: 0;
     padding: 0;

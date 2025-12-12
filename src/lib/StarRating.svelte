@@ -58,13 +58,19 @@
 
   /* When a radio is checked, color that star and all following stars (to the right in reversed flex) */
   input[type="radio"]:checked ~ .star-label {
-    color: #ffd700;
+    color: #d4af37;
+    text-shadow:
+      0 0 8px #d4af37,
+      0 0 10px #ffd700;
   }
 
   /* Hover effect: when hovering a label, color it and all following labels */
   .star-label:hover,
   .star-label:hover ~ .star-label {
-    color: #ffd700;
+    color: #d4af37;
+    text-shadow:
+      0 0 8px #d4af37,
+      0 0 10px #ffd700;
   }
 
   /* Screen reader only class */

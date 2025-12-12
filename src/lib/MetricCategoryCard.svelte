@@ -20,8 +20,8 @@
 
 <div class="card">
     <!-- Card Header -->
-    <header class="card-header has-background-light">
-        <p class="card-header-title is-centered has-text-black">
+    <header class="card-header">
+        <p class="card-header-title is-centered">
             {@html categoryLabel}
         </p>
     </header>
@@ -42,7 +42,10 @@
                                 onRatingChange(metric.id, value)}
                         />
                     </div>
-                    <textarea class="textarea is-info" placeholder="παρατηρήσεις" rows="2"
+                    <textarea
+                        class="textarea is-info"
+                        placeholder="παρατηρήσεις"
+                        rows="2"
                     ></textarea>
                 </div>
             {/each}
@@ -50,7 +53,7 @@
     </div>
 
     <!-- Card Footer - Average Score -->
-    <footer class="card-footer has-background-light">
+    <footer class="card-footer">
         <div class="card-footer-item is-justify-content-flex-end">
             <span class="tag is-info is-medium is-rounded">
                 Avg: {categoryAverage.toFixed(1)}/5.0
