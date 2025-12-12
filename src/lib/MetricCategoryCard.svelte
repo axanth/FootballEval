@@ -21,7 +21,7 @@
 <div class="card">
     <!-- Card Header -->
     <header class="card-header has-background-light">
-        <p class="card-header-title is-centered">
+        <p class="card-header-title is-centered has-text-black">
             {@html categoryLabel}
         </p>
     </header>
@@ -42,6 +42,8 @@
                                 onRatingChange(metric.id, value)}
                         />
                     </div>
+                    <textarea class="textarea is-info" placeholder="παρατηρήσεις" rows="2"
+                    ></textarea>
                 </div>
             {/each}
         </div>

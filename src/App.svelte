@@ -204,6 +204,7 @@
   let recipientEmail = "";
   let playerName = "";
   let coachName = "";
+  let teamName = "";
 
   // Validate email format
   $: isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail);
@@ -247,6 +248,19 @@
           </div>
         </label>
       </div>
+       <div class="field">
+        <label class="label"
+          >Team Name (Ομάδα παίχτη)
+          <div class="control is-expanded">
+            <input
+              class="input"
+              type="text"
+              placeholder="Enter team name"
+              bind:value={teamName}
+            />
+          </div>
+        </label>
+      </div>
       <div class="field">
         <label class="label"
           >Coach Name (Όνομα προπονητή)
@@ -260,6 +274,13 @@
           </div>
         </label>
       </div>
+      
+    </div>
+    <div class="has-text-centered mt-3 mb-3">
+      <p class="is-size-6 is-italic">
+        <small>Select the metric categories for evaluation <br /></small>
+        <small>Επιλέξτε τις κατηγορίες μετρήσεων προς αξιολόγηση</small>
+      </p>
     </div>
     <div class="box">
       <div class="checkboxes">
@@ -339,9 +360,9 @@
 </main>
 
 <style>
-    :global(html) {
-        color-scheme: light;
-    }
+  :global(html) {
+    color-scheme: light;
+  }
   :global(body) {
     margin: 0;
     padding: 0;
