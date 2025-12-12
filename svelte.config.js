@@ -22,7 +22,7 @@ const config = {
     // 2. Set the base path for your repo
     // Replace 'your-repo-name' with the actual name of your repository (e.g., 'my-svelte-app')
     paths: {
-      base: process.env.NODE_ENV === 'production' ? '/FootballEval' : '',
+      base: process.env.NODE_ENV === 'production' ? '/FootballEval' : '/FootballEval',
     }
   }
 };
