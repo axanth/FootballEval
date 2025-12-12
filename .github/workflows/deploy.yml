@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # This must match the 'pages' directory set in svelte.config.js
-          path: './build'
+          path: './dist'
 
   deploy:
     environment:

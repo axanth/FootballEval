@@ -12,8 +12,8 @@ const config = {
     // 1. Use the static adapter
     adapter: adapter({
       // default options are shown
-      pages: 'build',
-      assets: 'build',
+      pages: 'dist',
+      assets: 'dist',
       fallback: '404.html',
       precompress: false,
       strict: true
