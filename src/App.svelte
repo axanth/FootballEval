@@ -1,5 +1,7 @@
 <script lang="ts">
   import MetricCategoryCard from "./lib/MetricCategoryCard.svelte";
+  import { doc, setDoc } from "firebase/firestore";
+  import { db } from "./lib/firebase";
 
   interface Metric {
     id: string;
@@ -167,10 +169,15 @@
   ];
 
   let ratings: Record<string, number> = {};
+  let notes: Record<string, string> = {};
   let selectedCategories: string[] = [];
 
   function handleRatingChange(metricId: string, value: number) {
     ratings[metricId] = value;
+  }
+
+  function handleNoteChange(metricId: string, value: string) {
+    notes[metricId] = value;
   }
 
   function handleCategoryChange(categoryKey: string) {
@@ -219,16 +226,48 @@
   // Validate email format
   $: isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail);
 
-  function handleSendEmail() {
+  async function saveToFirestore() {
+    if (!playerName || age === null) {
+      console.warn("Cannot save: Player name or age missing");
+      return;
+    }
+
+    // Sanitize key: remove spaces and special chars to make a clean ID
+    const safeName = playerName.replace(/[^a-zA-Z0-9]/g, "");
+    const docId = `${safeName}_${age}`;
+
+    try {
+      await setDoc(doc(db, "evaluations", docId), {
+        playerName,
+        birthYear,
+        age,
+        teamName,
+        coachName,
+        ratings,
+        notes,
+        updatedAt: new Date().toISOString(),
+        email: recipientEmail,
+      });
+      console.log("Evaluation saved to Firestore with ID:", docId);
+    } catch (e) {
+      console.error("Error saving to Firestore:", e);
+      alert("Error saving data to database");
+    }
+  }
+
+  async function handleSendEmail() {
     if (!recipientEmail) {
       alert("Please enter an email address");
       return;
     }
 
+    // Save to Firestore before "sending"
+    await saveToFirestore();
+
     // TODO: Implement actual email sending logic
     console.log("Sending evaluation to:", recipientEmail);
     console.log("Ratings:", ratings);
-    alert(`Evaluation results will be sent to ${recipientEmail}`);
+    alert(`Evaluation results saved and sent to ${recipientEmail}`);
   }
 
   function parseCategoryLabel(label: string) {
@@ -386,7 +425,9 @@
             {categoryLabel}
             metrics={getMetricsByCategory(categoryKey)}
             {ratings}
+            {notes}
             onRatingChange={handleRatingChange}
+            onNoteChange={handleNoteChange}
           />
         </div>
       {/each}

@@ -4,7 +4,9 @@
     export let categoryLabel: string;
     export let metrics: Array<{ id: string; label: string }>;
     export let ratings: Record<string, number>;
+    export let notes: Record<string, string>;
     export let onRatingChange: (metricId: string, value: number) => void;
+    export let onNoteChange: (metricId: string, value: string) => void;
 
     // Reactive calculation that updates when ratings change
     $: categoryAverage = (() => {
@@ -43,9 +45,12 @@
                         />
                     </div>
                     <textarea
-                        class="textarea is-info"
+                        class="textarea is-info mt-2"
                         placeholder="παρατηρήσεις"
                         rows="2"
+                        value={notes[metric.id] || ""}
+                        on:input={(e) =>
+                            onNoteChange(metric.id, e.currentTarget.value)}
                     ></textarea>
                 </div>
             {/each}
