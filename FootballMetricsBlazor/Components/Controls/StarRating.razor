@@ -1,0 +1,45 @@
+<div class="rating-stars is-flex is-flex-direction-row-reverse is-justify-content-flex-start is-align-items-center">
+    @for (int i = MaxRating; i >= 1; i--)
+    {
+        var starValue = i;
+        <input type="radio"
+               name="@uniqueId"
+               id="@($"{uniqueId}-{starValue}")"
+               value="@starValue"
+               checked="@(Rating == starValue)"
+               @onchange="HandleChange"
+               class="is-sr-only" />
+        <label for="@($"{uniqueId}-{starValue}")" class="star-label"> ★ </label>
+    }
+
+    <!-- Reset option (hidden but allows deselection logic if needed, though radio usually sticks) -->
+    <input type="radio"
+           name="@uniqueId"
+           id="@($"{uniqueId}-0")"
+           value="0"
+           checked="@(Rating == 0)"
+           @onchange="HandleChange"
+           class="is-sr-only" />
+</div>
+
+@code {
+    [Parameter]
+    public int Rating { get; set; }
+
+    [Parameter]
+    public EventCallback<int> RatingChanged { get; set; }
+
+    [Parameter]
+    public int MaxRating { get; set; } = 5;
+
+    private string uniqueId = $"rating-{Guid.NewGuid().ToString("N").Substring(0, 9)}";
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int val))
+        {
+            Rating = val;
+            await RatingChanged.InvokeAsync(val);
+        }
+    }
+}

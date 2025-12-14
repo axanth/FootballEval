@@ -1,0 +1,310 @@
+﻿@page "/"
+@using System.Text.RegularExpressions
+@using FootballMetricsBlazor.Components.Controls
+@using FootballMetricsBlazor.Models
+
+<PageTitle>Football Player Evaluation</PageTitle>
+
+<main class="section">
+    <div class="container">
+        <!-- Header -->
+        <div class="has-text-centered mb-6">
+            <h1 class="title is-2 has-text-weight-bold">
+                ⚽ Football Player Evaluation
+            </h1>
+            <p class="subtitle is-4 mt-3">
+                Comprehensive assessment tool for coaches
+            </p>
+        </div>
+
+        <!-- Player Information -->
+        <div class="box mt-6">
+            <div class="field">
+                <label class="label">
+                    Player Name (Όνομα παίχτη)
+                    <div class="control is-expanded">
+                        <input class="input"
+                               type="text"
+                               placeholder="Enter player's name"
+                               @bind="PlayerName" />
+                    </div>
+                </label>
+            </div>
+            <div class="field">
+                <label class="label" for="birth-year">Birth Year (Έτος γέννησης)</label>
+                <div class="field has-addons">
+                    <div class="control is-expanded">
+                        <input id="birth-year"
+                               class="input @(!IsBirthYearValid && BirthYear != null ? "is-danger" : "")"
+                               type="number"
+                               min="@MinBirthYear"
+                               max="@MaxBirthYear"
+                               placeholder="Enter birth year (e.g. 2012)"
+                               @bind="BirthYear"
+                               @bind:after="CalculateAge" />
+                    </div>
+                    <div class="control">
+                        <span class="button is-static">
+                            @(Age != null ? $"Age: {Age}" : "Age: -")
+                        </span>
+                    </div>
+                </div>
+                @if (!IsBirthYearValid && BirthYear != null)
+                {
+                    <p class="help is-danger">
+                        Please enter a valid birth year between @MinBirthYear and @MaxBirthYear
+                        (ages 6-40).
+                    </p>
+                }
+            </div>
+            <div class="field">
+                <label class="label">
+                    Team Name (Ομάδα παίχτη)
+                    <div class="control is-expanded">
+                        <input class="input"
+                               type="text"
+                               placeholder="Enter team name"
+                               @bind="TeamName" />
+                    </div>
+                </label>
+            </div>
+            <div class="field">
+                <label class="label">
+                    Evaluator Name (Όνομα αξιολογητή)
+                    <div class="control is-expanded">
+                        <input class="input"
+                               type="text"
+                               placeholder="Enter evaluator's name"
+                               @bind="CoachName" />
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="has-text-centered mt-3 mb-3">
+            <p class="is-size-6 is-italic">
+                <small>Select the metric categories for evaluation <br /></small>
+                <small>Επιλέξτε τις κατηγορίες μετρήσεων προς αξιολόγηση</small>
+            </p>
+        </div>
+
+        <div class="box">
+            <div class="checkboxes">
+                @foreach (var category in Categories)
+                {
+                    var labelParts = ParseCategoryLabel(category.Value);
+                    <div class="row">
+                        <label class="b-checkbox checkbox is-large">
+                            <input type="checkbox"
+                                   checked="@(SelectedCategories.Contains(category.Key))"
+                                   @onchange="@(e => HandleCategoryChange(category.Key, e))" />
+                            <span class="check is-success"></span>
+                            <span class="control-label"
+                                  style="font-size: 0.75em; line-height: 1.2;">
+                                <span class="is-block has-text-weight-bold">
+                                    @labelParts.English
+                                </span>
+                                <span class="is-block is-italic has-text-grey-light">
+                                    @labelParts.Greek
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Overall Score Card -->
+        <div class="box mb-5">
+            <div class="is-flex is-justify-content-space-between is-align-items-center">
+                <h2 class="title is-4 mb-0">Overall Score</h2>
+                <div class="title is-2 has-text-warning mb-0">
+                    @CalculateOverallAverage().ToString("0.0")/5.0
+                </div>
+            </div>
+        </div>
+
+        <div class="has-text-centered mt-3 mb-3">
+            <p class="is-size-6 is-italic">
+                Click on stars to rate each metric from 1 to 5
+            </p>
+        </div>
+
+        <!-- Metrics by Category -->
+        <div class="columns is-multiline">
+            @foreach (var category in Categories)
+            {
+                if (SelectedCategories.Contains(category.Key))
+                {
+                    <div class="column is-half">
+                        <MetricCategoryCard CategoryKey="@category.Key"
+                                            CategoryLabel="@category.Value"
+                                            Metrics="@GetMetricsByCategory(category.Key)"
+                                            Ratings="@Ratings"
+                                            RatingChanged="@HandleRatingChange" />
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Email Section -->
+        <div class="box mt-6">
+            <h3 class="title is-5 mb-4">Send Evaluation Results</h3>
+            <div class="field has-addons">
+                <div class="control is-expanded">
+                    <input class="input"
+                           type="email"
+                           placeholder="Enter email address"
+                           @bind="RecipientEmail"
+                           @bind:event="oninput" />
+                </div>
+                <div class="control">
+                    <button class="button is-info"
+                            @onclick="HandleSendEmail"
+                            disabled="@(!IsValidEmail)">
+                        <span class="icon">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                        <span>Send Results</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@code {
+
+
+    private Dictionary<string, string> Categories = new()
+    {
+        { "Technical", "TECHNICAL (Τεχνικά στοιχεία)" },
+        { "Tactical", "TACTICAL (Τακτικά στοιχεία)" },
+        { "Physical", "PHYSICAL (Φυσικά χαρακτηριστικά)" },
+        { "Mental", "MENTAL (Ψυχολογικά / Νοητικά στοιχεία)" },
+        { "Social", "SOCIAL (Συμπεριφορά / Κοινωνική διάσταση)" }
+    };
+
+    private List<Metric> Metrics = new()
+    {
+        // TECHNICAL
+        new Metric { Id = "10000000-0000-0000-0000-000000000001", Key = "FirstControl", Label = "Πρώτο κοντρόλ", Category = "Technical" },
+        new Metric { Id = "10000000-0000-0000-0000-000000000002", Key = "Passing", Label = "Passing (κοντινό/μεσαίο/μακρινό)", Category = "Technical" },
+        new Metric { Id = "10000000-0000-0000-0000-000000000003", Key = "Finishing", Label = "Τελειώματα φάσεων", Category = "Technical" },
+        new Metric { Id = "10000000-0000-0000-0000-000000000004", Key = "Dribbling", Label = "Dribbling / 1v1", Category = "Technical" },
+        new Metric { Id = "10000000-0000-0000-0000-000000000005", Key = "BallHandlingUnderPressure", Label = "Χειρισμός μπάλας υπό πίεση", Category = "Technical" },
+
+        // TACTICAL
+        new Metric { Id = "20000000-0000-0000-0000-000000000001", Key = "BodyPositioning", Label = "Θέσεις σώματος / αντίληψη χώρου", Category = "Tactical" },
+        new Metric { Id = "20000000-0000-0000-0000-000000000002", Key = "DecisionMaking", Label = "Λήψη αποφάσεων", Category = "Tactical" },
+        new Metric { Id = "20000000-0000-0000-0000-000000000003", Key = "Transitions", Label = "Μεταβάσεις (άμυνα-επίθεση)", Category = "Tactical" },
+        new Metric { Id = "20000000-0000-0000-0000-000000000004", Key = "TacticalDiscipline", Label = "Πειθαρχία στο τακτικό πλάνο", Category = "Tactical" },
+        new Metric { Id = "20000000-0000-0000-0000-000000000005", Key = "LineCooperation", Label = "Συνεργασία με γραμμές", Category = "Tactical" },
+
+        // PHYSICAL
+        new Metric { Id = "30000000-0000-0000-0000-000000000001", Key = "SpeedAcceleration", Label = "Ταχύτητα / Επιτάχυνση", Category = "Physical" },
+        new Metric { Id = "30000000-0000-0000-0000-000000000002", Key = "Endurance", Label = "Αντοχή", Category = "Physical" },
+        new Metric { Id = "30000000-0000-0000-0000-000000000003", Key = "StrengthInDuels", Label = "Δύναμη στις μονομαχίες", Category = "Physical" },
+        new Metric { Id = "30000000-0000-0000-0000-000000000004", Key = "JumpingBalance", Label = "Άλμα / Σωματική ισορροπία", Category = "Physical" },
+
+        // MENTAL
+        new Metric { Id = "40000000-0000-0000-0000-000000000001", Key = "Concentration", Label = "Συγκέντρωση / Προσοχή", Category = "Mental" },
+        new Metric { Id = "40000000-0000-0000-0000-000000000002", Key = "PressureReaction", Label = "Αντίδραση σε πίεση / λάθος", Category = "Mental" },
+        new Metric { Id = "40000000-0000-0000-0000-000000000003", Key = "InitiativeCourage", Label = "Πρωτοβουλία / Θάρρος", Category = "Mental" },
+        new Metric { Id = "40000000-0000-0000-0000-000000000004", Key = "Agility", Label = "Προσαρμοστικότητα", Category = "Mental" },
+        new Metric { Id = "40000000-0000-0000-0000-000000000005", Key = "MentalStamina", Label = "Ανθεκτικότητα / Νοοτροπία εξέλιξης", Category = "Mental" },
+
+        // SOCIAL
+        new Metric { Id = "50000000-0000-0000-0000-000000000001", Key = "Teamwork", Label = "Συνεργασία με συμπαίκτες", Category = "Social" },
+        new Metric { Id = "50000000-0000-0000-0000-000000000002", Key = "RespectForCoaches", Label = "Σεβασμός σε προπονητές / κανόνες", Category = "Social" },
+        new Metric { Id = "50000000-0000-0000-0000-000000000003", Key = "Attendance", Label = "Παρουσία στις προπονήσεις", Category = "Social" },
+        new Metric { Id = "50000000-0000-0000-0000-000000000004", Key = "CommunicationLeadership", Label = "Επικοινωνία / Ηγετικά στοιχεία", Category = "Social" },
+    };
+
+    private Dictionary<string, int> Ratings = new();
+    private List<string> SelectedCategories = new();
+
+    private string PlayerName { get; set; } = "";
+    private int? BirthYear { get; set; }
+    private int? Age { get; set; }
+    private string TeamName { get; set; } = "";
+    private string CoachName { get; set; } = "";
+    private string RecipientEmail { get; set; } = "";
+
+    private int CurrentYear => DateTime.Now.Year;
+    private int MinBirthYear => CurrentYear - 40;
+    private int MaxBirthYear => CurrentYear - 6;
+
+    private bool IsBirthYearValid => !BirthYear.HasValue || (BirthYear >= MinBirthYear && BirthYear <= MaxBirthYear);
+
+    private bool IsValidEmail => !string.IsNullOrWhiteSpace(RecipientEmail) &&
+                               Regex.IsMatch(RecipientEmail, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+
+    private void CalculateAge()
+    {
+        Age = BirthYear.HasValue ? CurrentYear - BirthYear.Value : null;
+    }
+
+    private void HandleCategoryChange(string categoryKey, ChangeEventArgs e)
+    {
+        bool isChecked = (bool)(e.Value ?? false);
+        if (isChecked && !SelectedCategories.Contains(categoryKey))
+        {
+            SelectedCategories.Add(categoryKey);
+        }
+        else if (!isChecked && SelectedCategories.Contains(categoryKey))
+        {
+            SelectedCategories.Remove(categoryKey);
+        }
+    }
+
+    private void HandleRatingChange((string MetricId, int Value) args)
+    {
+        if (Ratings.ContainsKey(args.MetricId))
+        {
+            Ratings[args.MetricId] = args.Value;
+        }
+        else
+        {
+            Ratings.Add(args.MetricId, args.Value);
+        }
+    }
+
+    private List<Metric> GetMetricsByCategory(string category)
+    {
+        return Metrics.Where(m => m.Category == category).ToList();
+    }
+
+    private double CalculateOverallAverage()
+    {
+        var allRatings = Ratings.Values.Where(r => r > 0).ToList();
+        if (allRatings.Count == 0) return 0;
+        double sum = allRatings.Sum();
+        return Math.Round(sum / allRatings.Count, 1);
+    }
+
+    private (string English, string Greek) ParseCategoryLabel(string label)
+    {
+        var match = Regex.Match(label, @"^(.*)\s\((.*)\)$");
+        if (match.Success)
+        {
+            return (match.Groups[1].Value, match.Groups[2].Value);
+        }
+        return (label, "");
+    }
+
+    [Inject] IJSRuntime JSRuntime { get; set; }
+
+    private async Task HandleSendEmail()
+    {
+        if (!IsValidEmail)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Please enter a valid email address");
+            return;
+        }
+
+        Console.WriteLine($"Sending evaluation to: {RecipientEmail}");
+        Console.WriteLine($"Ratings count: {Ratings.Count}");
+        await JSRuntime.InvokeVoidAsync("alert", $"Evaluation results will be sent to {RecipientEmail}");
+    }
+}

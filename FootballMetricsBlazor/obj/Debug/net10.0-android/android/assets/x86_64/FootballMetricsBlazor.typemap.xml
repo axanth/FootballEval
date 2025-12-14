@@ -1,0 +1,10 @@
+<api type="debug" assembly-name="FootballMetricsBlazor" mvid="001ee0185b884ffd9d380415a6f8cd4c">
+  <java-to-managed>
+    <entry java-name="crc64a18b09f9439a3380/MainActivity" managed-name="FootballMetricsBlazor.MainActivity, FootballMetricsBlazor" managed-type-token-id="33554440" />
+    <entry java-name="crc64a18b09f9439a3380/MainApplication" managed-name="FootballMetricsBlazor.MainApplication, FootballMetricsBlazor" managed-type-token-id="33554441" />
+  </java-to-managed>
+  <managed-to-java>
+    <entry java-name="crc64a18b09f9439a3380/MainActivity" managed-name="FootballMetricsBlazor.MainActivity, FootballMetricsBlazor" managed-type-token-id="33554440" />
+    <entry java-name="crc64a18b09f9439a3380/MainApplication" managed-name="FootballMetricsBlazor.MainApplication, FootballMetricsBlazor" managed-type-token-id="33554441" />
+  </managed-to-java>
+</api>

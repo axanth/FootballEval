@@ -1,0 +1,70 @@
+@using FootballMetricsBlazor.Components.Pages
+
+<div class="card">
+    <header class="card-header">
+        <p class="card-header-title is-centered">
+            @((MarkupString)CategoryLabel)
+        </p>
+    </header>
+
+    <div class="card-content" data-key="@CategoryKey">
+        <div class="content">
+            @foreach (var metric in Metrics)
+            {
+                <div class="mb-4">
+                    <p class="has-text-centered has-text-weight-medium mb-3">
+                        @metric.Label
+                    </p>
+                    <div class="is-flex is-justify-content-center">
+                        <StarRating Rating="@(GetRating(metric.Id))"
+                                    RatingChanged="@(val => OnRatingChanged(metric.Id, val))"
+                                    MaxRating="5" />
+                    </div>
+                    <textarea class="textarea is-info"
+                              placeholder="παρατηρήσεις"
+                              rows="2"></textarea>
+                </div>
+            }
+        </div>
+    </div>
+
+    <footer class="card-footer">
+        <div class="card-footer-item is-justify-content-flex-end">
+            <span class="tag is-info is-medium is-rounded">
+                Avg: @CategoryAverage.ToString("0.0")/5.0
+            </span>
+        </div>
+    </footer>
+</div>
+
+@code {
+    [Parameter] public string CategoryKey { get; set; }
+    [Parameter] public string CategoryLabel { get; set; }
+    [Parameter] public List<FootballMetricsBlazor.Models.Metric> Metrics { get; set; }
+    [Parameter] public Dictionary<string, int> Ratings { get; set; }
+    [Parameter] public EventCallback<(string MetricId, int Value)> RatingChanged { get; set; }
+
+    private double CategoryAverage
+    {
+        get
+        {
+            if (Metrics == null || Ratings == null) return 0;
+            
+            var ratedMetrics = Metrics.Where(m => Ratings.ContainsKey(m.Id) && Ratings[m.Id] > 0).ToList();
+            if (ratedMetrics.Count == 0) return 0;
+            
+            double sum = ratedMetrics.Sum(m => Ratings[m.Id]);
+            return Math.Round(sum / ratedMetrics.Count, 1);
+        }
+    }
+
+    private int GetRating(string metricId)
+    {
+        return Ratings.ContainsKey(metricId) ? Ratings[metricId] : 0;
+    }
+
+    private async Task OnRatingChanged(string metricId, int value)
+    {
+        await RatingChanged.InvokeAsync((metricId, value));
+    }
+}
